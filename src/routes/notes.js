@@ -1,18 +1,35 @@
 const express = require("express");
+const { PrismaClient } = require("@prisma/client");
+
 const router = express.Router();
+const prisma = new PrismaClient();
 
-// ersätts senare med riktig data från DB
-const tempData = [{ text: "hej" }, { text: "morjens" }];
-
-router.get("/", (req, res) => {
-  res.send(tempData);
+router.get("/", async (req, res) => {
+  try {
+    const notes = await prisma.note.findMany({
+      where: { author_id: 1 },
+    });
+    res.json(notes);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ msg: "Error" });
+  }
 });
 
-router.post("/", (req, res) => {
-  console.log("POST");
+router.post("/", async (req, res) => {
+  try {
+    const newNote = await prisma.note.create({
+      data: {
+        author_id: 1,
+        note: req.body.text,
+      },
+    });
 
-  // simulering av SQL INSERT INTO....
-  tempData.push(req.body);
+    res.json({ msg: "New note created", id: newNote.id });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ msg: "Error: POST failed" });
+  }
 
   res.send({
     method: req.method,
